@@ -1,3 +1,5 @@
+require ("textured_polygon")
+
 function dist(a, b)
   l = b.x-a.x
   m = b.y-a.y
@@ -108,7 +110,10 @@ function render3d()
   for i = 1,#wallsorder,1 do
     wall.s = {x = wallsorder[i].s.x, y = wallsorder[i].s.y}
     wall.e = {x = wallsorder[i].e.x, y = wallsorder[i].e.y}
-    love.graphics.setColor(wallsorder[i].c.r, wallsorder[i].c.g, wallsorder[i].c.b)
+    
+    if (wallsorder[i].img == nil) then 
+      love.graphics.setColor(wallsorder[i].c.r, wallsorder[i].c.g, wallsorder[i].c.b) 
+    end
     whats_in = {}
     if (wallInPersoVision(whats_in)) then
       
@@ -120,40 +125,10 @@ function render3d()
       
       left_field = 180-perso.a_vision/2
       right_field = 180+perso.a_vision/2
-      if (not whats_in.e or not whats_in.s) then
-        point = {x = 0, y = 0}
-        res = {}
-        cutPointAngleVisionAndWall(res, point)
-        if (dir == -1) then print("error not cutting!!") end
-        if (res.cut_left) then
-          wall_angle_s = left_field
-          wall_rel.s = pRel2Perso(point)
-          if (isInverse) then
-            wall_rel.e = pRel2Perso(wall.s)
-          else
-            wall_rel.e = pRel2Perso(wall.e)
-          end
-        wall_angle_e = 180-math.deg(p2angle(perso_rel, wall_rel.e))
-          
-        end
-        if (res.cut_right) then
-          wall_angle_e = right_field
-          wall_rel.e = pRel2Perso(point)
-          if (not cut_left) then
-            if (isInverse) then
-              wall_rel.s = pRel2Perso(wall.e)
-            else
-              wall_rel.s = pRel2Perso(wall.s)
-            end
-            wall_angle_s = 180-math.deg(p2angle(perso_rel, wall_rel.s))
-          end
-        end
-      else
-        wall_rel.s = pRel2Perso(wall.s)
-        wall_rel.e = pRel2Perso(wall.e)
-        wall_angle_s = 180-math.deg(p2angle(perso_rel, wall_rel.s))
-        wall_angle_e = 180-math.deg(p2angle(perso_rel, wall_rel.e))
-      end
+      wall_rel.s = pRel2Perso(wall.s)
+      wall_rel.e = pRel2Perso(wall.e)
+      wall_angle_s = 180-math.deg(p2angle(perso_rel, wall_rel.s))
+      wall_angle_e = 180-math.deg(p2angle(perso_rel, wall_rel.e))
       
       if (wall_rel.s.x == nil) then print("nil!!") end
             
@@ -165,7 +140,6 @@ function render3d()
     
       left_wall_a = wall_angle_s
       right_wall_a = wall_angle_e
-
       vec_a = wall_angle_e-wall_angle_s
       if (left_wall_a>360) then left_wall_a = left_wall_a-360 end
       if (right_wall_a>360) then right_wall_a = right_wall_a-360 end
@@ -186,7 +160,23 @@ function render3d()
       starty_e = (wall_angle_e_top-perso.h_vision_min)*h*2/perso.h_a_vision
       endy_e = (wall_angle_e_bottom-perso.h_vision_min)*h*2/perso.h_a_vision
       
-      love.graphics.polygon("fill", startx, starty_s, startx, endy_s, endx, endy_e, endx, starty_e)
+      if (wallsorder[i].img ~= nil)then 
+        v1 = {}
+        v2 = {}
+        v3 = {}
+        v4 = {}
+        v1[1] = startx
+        v1[2] = starty_s
+        v2[1] = startx
+        v2[2] = endy_s
+        v3[1] = endx
+        v3[2] = endy_e
+        v4[1] = endx
+        v4[2] = starty_e
+        quad(wallsorder[i].img, v1, v2, v3, v4)
+      else 
+        love.graphics.polygon("fill", startx, starty_s, startx, endy_s, endx, endy_e, endx, starty_e)
+      end
     end
     love.graphics.setColor(255, 255, 255)
   end
@@ -298,7 +288,8 @@ end
 function updateWallsOrder()
   tmpwalls = {}
   wallsorder = {}
-  for i = 1, #walls, 1 do tmpwalls[i] = walls[i]
+  for i = 1, #walls, 1 do 
+    tmpwalls[i] = walls[i]
     tmpwalls[i].d = nil
   end
   while #tmpwalls>0 do
@@ -317,6 +308,7 @@ function updateWallsOrder()
       end
     end
     wallsorder[#wallsorder+1] = tmpwalls[bestindex]
+
     table.remove(tmpwalls, bestindex)
   end
 end
